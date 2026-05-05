@@ -3,17 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planificación de Turnos</title>
-    <link rel="stylesheet" href="css/main.css">
+    <title>Planificador de Turnos - Gestión de Equipo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: system-ui; }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+        .calendar-header {
+            font-weight: bold;
+            background-color: #e9ecef;
+            padding: 10px;
+        }
+        .calendar-day {
+            min-height: 100px;
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .calendar-day:hover {
+            background-color: #f1f3f5;
+        }
+        .day-number {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #495057;
+            text-align: left;
+            margin-bottom: 5px;
+        }
+        .turno-badge {
+            font-size: 0.75em;
+            padding: 4px;
+            margin-bottom: 3px;
+            border-radius: 4px;
+            text-align: left;
+        }
+        .turno-manana {
+            background-color: #e3f2fd;
+            border-left: 4px solid #0d47a1;
+            color: #0d47a1;
+        }
+        .turno-tarde {
+            background-color: #fff3e0;
+            border-left: 4px solid #e65100;
+            color: #e65100;
+        }
+        .alert-cobertura {
+            border: 1.5px solid #dc3545 !important;
+            background-color: #fdf2f2 !important;
+        }
+        .festivo {
+            background-color: #ffebee !important;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Planificador de Turnos</h1>
-        <div id="estado">Cargando planificación...</div>
+
+    <div class="container-fluid py-4">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">Planificador de Turnos</h1>
+                <p class="text-muted mb-0">Mayo 2026</p>
+            </div>
+            <div>
+                <button class="btn btn-outline-primary active" id="btn-mes">Vista Mes</button>
+                <button class="btn btn-outline-primary" id="btn-semana">Vista Semana</button>
+            </div>
+        </header>
+
+        <div class="row">
+            <div class="col-md-9">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="calendar-grid">
+                            <div class="calendar-header">Lun</div>
+                            <div class="calendar-header">Mar</div>
+                            <div class="calendar-header">Mié</div>
+                            <div class="calendar-header">Jue</div>
+                            <div class="calendar-header">Vie</div>
+                            <div class="calendar-header">Sáb</div>
+                            <div class="calendar-header">Dom</div>
+                        </div>
+                        <div class="calendar-grid mt-2" id="calendar-body">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="h6 mb-0">Resumen Vacaciones Equipo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="vacaciones-list">
+                            </div>
+                    </div>
+                </div>
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="h6 mb-0">Detalle del Día</h5>
+                    </div>
+                    <div class="card-body" id="day-detail">
+                        <p class="text-muted text-center my-4">Selecciona un día en el calendario para ver el detalle</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="js/dataLoader.js"></script>
-    <script src="js/rules.js"></script>
-    <script src="js/app.js"></script>
+    <script>
+        // Datos del equipo
+        const usuarios = [
+            { "id": 1, "nombre": "Ana Gómez", "rol": "Técnico", "vacaciones_totales": 22, "vacaciones_consumidas": 5 },
+            { "id": 2, "nombre": "Carlos Ruiz", "rol": "Técnico", "vacaciones_totales": 22, "vacaciones_consumidas": 10 },
+            { "id": 3, "nombre": "Beatriz Soler", "rol": "Técnico", "vacaciones_totales": 22, "vacaciones_consumidas": 2 },
+            { "id": 4, "nombre": "David Ferrer", "rol": "Técnico", "vacaciones_totales": 22, "vacaciones_consumidas": 0 },
+            { "id": 5, "nombre": "Elena Martín", "rol": "Técnico", "vacaciones_totales": 22, "vacaciones_consumidas": 8 },
+            { "id": 6, "nombre": "Francisco José", "rol": "Técnico", "vacaciones_totales": 22, "vacaciones_consumidas": 4 },
+            { "id": 7, "nombre": "Gloria Sánchez", "rol": "Técnico", "vacaciones_totales": 22, "vacaciones_consumidas": 6 },
+            { "id": 8, "nombre": "Héctor Pérez", "rol": "Técnico", "vacaciones_totales": 22, "vacaciones_consumidas": 3 }
+        ];
+
+        const festivos = [
+            { "fecha": "2026-05-01", "tipo": "Nacional", "descripcion": "Fiesta del Trabajador" },
+            { "fecha": "2026-05-15", "tipo": "Local", "descripcion": "San Isidro" }
+        ];
+
+        const planificacion = {
+            "2026-05-12": {
+                "Mañana": { "asignados": [1, 2, 3, 4, 5, 6], "vacaciones": [] },
+                "Tarde": { "asignados": [7, 8], "vacaciones": [] }
+            },
+            "2026-05-01": {
+                "Mañana": { "asignados": [1, 2, 3], "vacaciones": [4, 5] },
+                "Tarde": { "asignados": [6], "vacaciones": [7, 8] }
+            }
+        };
+
+        const turnosConfig = {
+            "Mañana": { "horario": "08:00 - 17:00", "min_personal": 3 },
+            "Tarde": { "horario": "15:00 - 24:00", "min_personal": 2 }
+        };
+
+        // Renderizado del calendario de Mayo 2026
+        function renderCalendar() {
+            const calendarBody = document.getElementById('calendar-body');
+            calendarBody.innerHTML = '';
+
+            // En mayo de 2026, el día 1 comienza un viernes (semanas simplificadas para el ejemplo)
+            // Rellenamos días vacíos hasta llegar al 1 (Mayo 2026 empieza en viernes -> 4 celdas vacías)
+            for(let i = 0; i < 4; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'calendar-day bg-light';
+                calendarBody.appendChild(emptyDiv);
+            }
+
+            // Generar los 31 días de mayo
+            for(let day = 1; day <= 31; day++) {
+                const dayStr = `2026-05-${day < 10 ? '0' : ''}${day}`;
+                const divDay = document.createElement('div');
+                divDay.className = 'calendar-day';
+                divDay.onclick = () => mostrarDetalleDia(dayStr);
+
+                let isFestivo = festivos.find(f => f.fecha === dayStr);
+                if(isFestivo) divDay.classList.add('festivo');
+
+                let html = `<div class="day-number">${day} ${isFestivo ? `<small class="text-danger">★</small>` : ''}</div>`;
+
+                let plan = planificacion[dayStr];
+                if(plan) {
+                    // Turno Mañana
+                    let mananaCount = plan["Mañana"] ? plan["Mañana"].asignados.length : 0;
+                    let mananaStatus = mananaCount < turnosConfig["Mañana"].min_personal ? 'alert-cobertura' : '';
+                    html += `<div class="turno-badge turno-manana ${mananaStatus}">Mañana: ${mananaCount}/${turnosConfig["Mañana"].min_personal}</div>`;
+
+                    // Turno Tarde
+                    let tardeCount = plan["Tarde"] ? plan["Tarde"].asignados.length : 0;
+                    let tardeStatus = tardeCount < turnosConfig["Tarde"].min_personal ? 'alert-cobertura' : '';
+                    html += `<div class="turno-badge turno-tarde ${tardeStatus}">Tarde: ${tardeCount}/${turnosConfig["Tarde"].min_personal}</div>`;
+                } else {
+                    html += `<div class="text-muted small my-3">Sin asignar</div>`;
+                }
+
+                divDay.innerHTML = html;
+                calendarBody.appendChild(divDay);
+            }
+        }
+
+        function mostrarDetalleDia(fecha) {
+            const detailDiv = document.getElementById('day-detail');
+            const plan = planificacion[fecha];
+            
+            if(!plan) {
+                detailDiv.innerHTML = `<p class="text-muted small">Sin información para el ${fecha}</p>`;
+                return;
+            }
+
+            let html = `<strong>Fecha: ${fecha}</strong><hr class="my-2">`;
+            for(let turnoName in plan) {
+                let turnoObj = plan[turnoName];
+                let asignadosNombres = turnoObj.asignados.map(id => usuarios.find(u => u.id === id)?.nombre || 'User').join(', ');
+                
+                html += `<div class="mb-3">
+                    <span class="badge ${turnoName === 'Mañana' ? 'bg-primary' : 'bg-warning text-dark'}">${turnoName}</span>
+                    <small class="d-block mt-1 text-muted">Personal: ${asignadosNombres}</small>
+                </div>`;
+            }
+            detailDiv.innerHTML = html;
+        }
+
+        function renderVacaciones() {
+            const listDiv = document.getElementById('vacaciones-list');
+            let html = '';
+            usuarios.forEach(u => {
+                let pendientes = u.vacaciones_totales - u.vacaciones_consumidas;
+                html += `<div class="mb-3 border-bottom pb-2">
+                    <div class="fw-bold small">${u.nombre}</div>
+                    <div class="progress mt-1" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: ${(u.vacaciones_consumidas/u.vacaciones_totales)*100}%"></div>
+                    </div>
+                    <small class="text-muted d-flex justify-content-between mt-1">
+                        <span>Consumidos: ${u.vacaciones_consumidas}</span>
+                        <span>Restantes: ${pendientes}</span>
+                    </small>
+                </div>`;
+            });
+            listDiv.innerHTML = html;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+            renderVacaciones();
+        });
+    </script>
 </body>
 </html>
