@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Ops - Shift Planner Pro v3.0</title>
+    <title>IT Ops - Shift Planner Pro v3.1</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
@@ -12,10 +12,10 @@
         .sidebar { background: white; border-right: 1px solid #dee2e6; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
         .calendar-table { table-layout: fixed; background: white; border-collapse: separate; border-spacing: 0; width: 100%; border: 1px solid #dee2e6; }
         .calendar-table th { background: #f8f9fa; text-align: center; padding: 8px; border: 1px solid #dee2e6; }
-        .calendar-cell { height: 110px; border: 1px solid #dee2e6; padding: 4px; vertical-align: top; transition: 0.2s; position: relative; }
+        .calendar-cell { height: 125px; border: 1px solid #dee2e6; padding: 4px; vertical-align: top; transition: 0.2s; position: relative; overflow: hidden; }
         .calendar-cell:hover { background-color: #f1f3f5; cursor: pointer; }
         .day-num { font-weight: bold; font-size: 1rem; }
-        .badge-shift { display: block; padding: 2px 5px; border-radius: 3px; margin-bottom: 2px; font-size: 0.7rem; font-weight: 500; border-left: 3px solid transparent; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .badge-shift { display: block; padding: 2px 5px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65rem; font-weight: 500; border-left: 3px solid transparent; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .m-shift { background: var(--shift-morn); color: var(--shift-morn-text); border-left-color: var(--shift-morn-text); }
         .t-shift { background: var(--shift-aft); color: var(--shift-aft-text); border-left-color: var(--shift-aft-text); }
         .v-shift { background: #eee; color: #666; border-left-color: #999; font-style: italic; }
@@ -30,7 +30,7 @@
 <div class="container-fluid">
     <div class="row">
         <nav class="col-md-3 col-lg-2 sidebar p-3 no-print">
-            <h5 class="text-primary mb-4"><i class="bi bi-calendar-check-fill me-2"></i>ShiftPlanner <span class="badge bg-dark">v3.0</span></h5>
+            <h5 class="text-primary mb-4"><i class="bi bi-people-fill me-2"></i>IT Team <span class="badge bg-dark">v3.1</span></h5>
             
             <div class="d-grid gap-2 mb-4">
                 <button class="btn btn-primary btn-sm" onclick="exportData()">
@@ -41,11 +41,11 @@
                 </button>
             </div>
 
-            <h6>Equipo (Saldo Vacaciones)</h6>
+            <h6>Equipo (Días restantes)</h6>
             <div id="team-list" class="list-group list-group-flush small mb-4"></div>
 
             <div class="alert alert-info small">
-                <i class="bi bi-info-circle me-2"></i>Haz clic en cualquier día para editar turnos o vacaciones.
+                <i class="bi bi-info-circle me-2"></i>Haz clic en un día para editar turnos de los técnicos.
             </div>
         </nav>
 
@@ -77,7 +77,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-light">
-                <h5 class="modal-title" id="editModalLabel">Editar Día</h5>
+                <h5 class="modal-title" id="editModalLabel">Asignación de Técnicos</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -91,13 +91,13 @@
                         <div id="aft-selectors"></div>
                     </div>
                     <div class="col-md-4">
-                        <label class="fw-bold text-secondary border-bottom w-100 mb-2">Vacaciones</label>
+                        <label class="fw-bold text-secondary border-bottom w-100 mb-2">Vacaciones / OFF</label>
                         <div id="vac-selectors"></div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary w-100" onclick="saveDayChanges()">Aplicar Cambios Temporalmente</button>
+                <button type="button" class="btn btn-primary w-100" onclick="saveDayChanges()">Aplicar Cambios</button>
             </div>
         </div>
     </div>
@@ -108,8 +108,8 @@
         <div class="modal-content">
             <div class="modal-header"><h5>Guardar Cambios en GitHub</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <p>Copia el siguiente código y pégalo dentro de tu archivo <code>data/planificacion.json</code> en GitHub:</p>
-                <textarea id="json-output" class="form-control" rows="10" readonly style="font-family: monospace; font-size: 12px;"></textarea>
+                <p>Copia este código y pégalo en tu archivo <code>data/planificacion.json</code>:</p>
+                <textarea id="json-output" class="form-control" rows="10" readonly style="font-family: monospace; font-size: 11px;"></textarea>
             </div>
             <div class="modal-footer"><button class="btn btn-success" onclick="copyToClipboard()">Copiar al Portapapeles</button></div>
         </div>
@@ -117,27 +117,23 @@
 </div>
 
 <script>
-// --- ESTADO GLOBAL ---
-let viewDate = new Date(2026, 4, 1); // Mayo 2026 por defecto
-let selectedDateKey = "";
-
+// --- NUEVA LISTA DE TÉCNICOS ---
 const team = [
-    { id: 1, name: "Ana G.", vac_total: 22, vac_used: 5 },
-    { id: 2, name: "Carlos R.", vac_total: 22, vac_used: 12 },
-    { id: 3, name: "Beatriz S.", vac_total: 22, vac_used: 2 },
-    { id: 4, name: "David F.", vac_total: 22, vac_used: 0 },
-    { id: 5, name: "Elena M.", vac_total: 22, vac_used: 8 },
-    { id: 6, name: "Fran J.", vac_total: 22, vac_used: 4 },
-    { id: 7, name: "Gloria S.", vac_total: 22, vac_used: 6 },
-    { id: 8, name: "Hector P.", vac_total: 22, vac_used: 3 }
+    { id: 1, name: "Max Sendra", vac_total: 22, vac_used: 0 },
+    { id: 2, name: "Carlos Guerrero", vac_total: 22, vac_used: 0 },
+    { id: 3, name: "Alejandro G. Torres", vac_total: 22, vac_used: 0 },
+    { id: 4, name: "Sergio de la Casa Redondo", vac_total: 22, vac_used: 0 },
+    { id: 5, name: "Alejandro G. Valdes", vac_total: 22, vac_used: 0 },
+    { id: 6, name: "Hector Adarbe", vac_total: 22, vac_used: 0 },
+    { id: 7, name: "Pablo Terron", vac_total: 22, vac_used: 0 },
+    { id: 8, name: "Alejandro Lopez", vac_total: 22, vac_used: 0 }
 ];
 
-const holidays = { "2026-05-01": "Día del Trabajo", "2026-05-15": "San Isidro" };
-
-// Datos dinámicos (esto es lo que se exportará)
+let viewDate = new Date(); 
+let selectedDateKey = "";
 let schedule = JSON.parse(localStorage.getItem('shiftData')) || {};
+const holidays = { "2026-05-01": "Día del Trabajo", "2026-05-15": "San Isidro", "2026-12-25": "Navidad" };
 
-// --- LÓGICA DE CALENDARIO ---
 function renderCalendar() {
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
@@ -151,7 +147,7 @@ function renderCalendar() {
     body.innerHTML = '';
     
     let rows = '<tr>';
-    let startOffset = firstDay === 0 ? 6 : firstDay - 1; // Ajuste para que lunes sea 1
+    let startOffset = firstDay === 0 ? 6 : firstDay - 1; 
     
     for(let i=0; i < startOffset; i++) rows += '<td class="calendar-cell bg-light"></td>';
 
@@ -160,7 +156,6 @@ function renderCalendar() {
         const dayData = schedule[dateKey] || { m: [], a: [], v: [] };
         const isHoliday = holidays[dateKey];
         
-        // Validación
         const realM = dayData.m.filter(id => !dayData.v.includes(id)).length;
         const realA = dayData.a.filter(id => !dayData.v.includes(id)).length;
         const hasError = realM < 3 || realA < 2;
@@ -187,62 +182,48 @@ function renderCalendar() {
 
 function renderTeamList() {
     document.getElementById('team-list').innerHTML = team.map(p => `
-        <div class="list-group-item px-0 py-1 d-flex justify-content-between">
-            <span>${p.name}</span>
-            <span class="text-muted">${p.vac_total - p.vac_used} días</span>
+        <div class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center">
+            <span title="${p.name}">${p.name}</span>
+            <span class="badge bg-light text-dark border">${p.vac_total - p.vac_used}d</span>
         </div>
     `).join('');
 }
 
-// --- EDICIÓN ---
 function openEdit(dateKey) {
     selectedDateKey = dateKey;
     const dayData = schedule[dateKey] || { m: [], a: [], v: [] };
-    
     const generateChecks = (type) => team.map(p => `
-        <div class="form-check">
+        <div class="form-check small">
             <input class="form-check-input" type="checkbox" value="${p.id}" id="${type}-${p.id}" ${dayData[type].includes(p.id) ? 'checked' : ''}>
             <label class="form-check-label">${p.name}</label>
         </div>
     `).join('');
-
     document.getElementById('morn-selectors').innerHTML = generateChecks('m');
     document.getElementById('aft-selectors').innerHTML = generateChecks('a');
     document.getElementById('vac-selectors').innerHTML = generateChecks('v');
-    
     new bootstrap.Modal(document.getElementById('editModal')).show();
 }
 
 function saveDayChanges() {
     const getValues = (type) => Array.from(document.querySelectorAll(`input[id^="${type}-"]:checked`)).map(el => parseInt(el.value));
-    
-    schedule[selectedDateKey] = {
-        m: getValues('m'),
-        a: getValues('a'),
-        v: getValues('v')
-    };
-    
+    schedule[selectedDateKey] = { m: getValues('m'), a: getValues('a'), v: getValues('v') };
     localStorage.setItem('shiftData', JSON.stringify(schedule));
     renderCalendar();
     bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
 }
 
-// --- UTILIDADES ---
 function changeMonth(offset) { viewDate.setMonth(viewDate.getMonth() + offset); renderCalendar(); }
 function goToToday() { viewDate = new Date(); renderCalendar(); }
-
 function exportData() {
     document.getElementById('json-output').value = JSON.stringify(schedule, null, 2);
     new bootstrap.Modal(document.getElementById('exportModal')).show();
 }
-
 function copyToClipboard() {
     const ta = document.getElementById('json-output');
     ta.select();
     document.execCommand('copy');
-    alert("¡Copiado! Ahora ve a GitHub, edita planificacion.json y pega esto.");
+    alert("Copiado. Pégalo en data/planificacion.json");
 }
-
 document.addEventListener('DOMContentLoaded', renderCalendar);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
