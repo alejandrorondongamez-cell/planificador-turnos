@@ -1,0 +1,74 @@
+[
+  {
+    "id": "max-sendra",
+    "name": "Max Sendra",
+    "role": "senior",
+    "vacation": {
+      "total": 22
+    },
+    "timeOff": []
+  },
+  {
+    "id": "carlos-guerrero",
+    "name": "Carlos Guerrero",
+    "role": "standard",
+    "vacation": {
+      "total": 22
+    },
+    "timeOff": []
+  },
+  {
+    "id": "alejandro-torres",
+    "name": "Alejandro G. Torres",
+    "role": "standard",
+    "vacation": {
+      "total": 22
+    },
+    "timeOff": []
+  },
+  {
+    "id": "sergio-casa",
+    "name": "Sergio de la Casa Redondo",
+    "role": "standard",
+    "vacation": {
+      "total": 22
+    },
+    "timeOff": []
+  },
+  {
+    "id": "alejandro-valdes",
+    "name": "Alejandro G. Valdes",
+    "role": "senior",
+    "vacation": {
+      "total": 22
+    },
+    "timeOff": []
+  },
+  {
+    "id": "hector-adarbe",
+    "name": "Hector Adarbe",
+    "role": "senior",
+    "vacation": {
+      "total": 22
+    },
+    "timeOff": []
+  },
+  {
+    "id": "pablo-terron",
+    "name": "Pablo Terron",
+    "role": "senior",
+    "vacation": {
+      "total": 22
+    },
+    "timeOff": []
+  },
+  {
+    "id": "alejandro-lopez",
+    "name": "Alejandro Lopez",
+    "role": "standard",
+    "vacation": {
+      "total": 22
+    },
+    "timeOff": []
+  }
+]
