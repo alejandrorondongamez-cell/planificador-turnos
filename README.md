@@ -1,3 +1,5 @@
-# IT Planner v5.7 PRO
+# IT Planner v5.8 PRO
 
-Cambios: vacaciones >2 personas por semana ahora alerta pero permite continuar; reporte separa festivo legal Alicante/CV/nacional de impacto Madrid; generador mejora equilibrio de tardes y festivos legales.
+- Generador: balance anual usando todo el histórico del año en schedule.json.
+- Reporte: por defecto anual (con switch a mes), export CSV anual.
+- UI: vista semana con altura estable y cabecera de días resaltada.
