@@ -3,52 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>IT Planner v5.2 FIX</title>
-
+  <title>IT Planner v5.3 PRO</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
-
 <body>
   <aside class="sidebar">
-    <div class="brand">
-      ⚙ <strong id="appName">IT Planner</strong>
-    </div>
+    <div class="brand">⚙ <strong id="appName">IT Planner</strong></div>
 
-    <div id="modeBox" class="mode readonly">
-      Modo lectura
-    </div>
+    <div id="modeBox" class="mode readonly">Modo lectura</div>
 
-    <button id="btnUnlock" class="btn dark">
-      🔐 Desbloquear edición
-    </button>
-
-    <button id="btnLock" class="btn adminOnly hidden">
-      🔒 Bloquear edición
-    </button>
-
-    <button id="btnVacations" class="btn adminOnly hidden">
-      🌴 Vacaciones / Ausencias
-    </button>
-
-    <button id="btnAuto" class="btn dark adminOnly hidden">
-      🪄 Generador automático
-    </button>
-
-    <button id="btnBulk" class="btn adminOnly hidden">
-      📆 Asignación por rango
-    </button>
-
-    <button id="btnReport" class="btn adminOnly hidden">
-      📊 Reporte de horas
-    </button>
-
-    <button id="btnGitHub" class="btn primary adminOnly hidden">
-      ☁ Guardar en GitHub
-    </button>
-
-    <button id="btnExport" class="btn">
-      ⬇ Exportar JSON
-    </button>
+    <button id="btnUnlock" class="btn dark">🔐 Desbloquear edición</button>
+    <button id="btnLock" class="btn adminOnly hidden">🔒 Bloquear edición</button>
+    <button id="btnVacations" class="btn adminOnly hidden">🌴 Vacaciones / Ausencias</button>
+    <button id="btnAuto" class="btn dark adminOnly hidden">🪄 Generador automático</button>
+    <button id="btnBulk" class="btn adminOnly hidden">📆 Asignación por rango</button>
+    <button id="btnReport" class="btn adminOnly hidden">📊 Reporte de horas</button>
+    <button id="btnGitHub" class="btn primary adminOnly hidden">☁ Guardar en GitHub</button>
+    <button id="btnExport" class="btn">⬇ Exportar JSON</button>
 
     <section class="box">
       <h3>Equipo</h3>
@@ -74,7 +45,6 @@
   <main class="main">
     <header class="topbar">
       <h1 id="monthTitle"></h1>
-
       <div class="nav">
         <button id="prev">‹</button>
         <button id="today">Hoy</button>
@@ -83,81 +53,62 @@
     </header>
 
     <section id="alerts" class="alerts"></section>
-
     <section id="calendar" class="calendar"></section>
   </main>
 
-  <!-- Modal: Acceso administrador -->
   <dialog id="adminDialog">
     <form method="dialog" class="card">
-      <h2>Acceso administrador</h2>
-
-      <p class="hint">
-        Contraseña validada con SHA-256. No se guarda en texto plano.
-      </p>
-
-      <input
-        id="adminPassword"
-        type="password"
-        placeholder="Contraseña"
-      >
-
-      <button id="doUnlock" class="btn primary">
-        Entrar
-      </button>
+      <div class="dialogHeader">
+        <h2>Acceso administrador</h2>
+        <button type="button" class="iconClose" data-close="adminDialog">×</button>
+      </div>
+      <p class="hint">Introduzca la contraseña de administrador.</p>
+      <input id="adminPassword" type="password" placeholder="Contraseña" autocomplete="off">
+      <button id="doUnlock" class="btn primary">Entrar</button>
     </form>
   </dialog>
 
-  <!-- Modal: Detalle de día -->
   <dialog id="dayDialog">
     <form method="dialog" class="card wide">
-      <h2 id="dayTitle"></h2>
-
+      <div class="dialogHeader">
+        <h2 id="dayTitle"></h2>
+        <button type="button" class="iconClose" data-close="dayDialog">×</button>
+      </div>
       <div id="dayMeta" class="hint"></div>
-
       <div id="dayWarnings"></div>
-
       <div class="two">
         <section>
           <h3>Mañana</h3>
           <div id="morningChecks"></div>
         </section>
-
         <section>
           <h3>Tarde</h3>
           <div id="eveningChecks"></div>
         </section>
       </div>
-
-      <button id="saveDay" class="btn primary adminOnly">
-        Guardar
-      </button>
+      <button id="saveDay" class="btn primary adminOnly">Guardar</button>
     </form>
   </dialog>
 
-  <!-- Modal: Vacaciones -->
   <dialog id="vacDialog">
     <form method="dialog" class="card wide">
-      <h2>Vacaciones</h2>
-
+      <div class="dialogHeader">
+        <h2>Vacaciones / Ausencias</h2>
+        <button type="button" class="iconClose" data-close="vacDialog">×</button>
+      </div>
       <div class="two">
         <section>
+          <label>Persona</label>
           <select id="vacUser"></select>
-
+          <label>Desde</label>
           <input id="vacFrom" type="date">
-
+          <label>Hasta</label>
           <input id="vacTo" type="date">
-
-          <input
-            id="vacNotes"
-            placeholder="Notas"
-          >
-
-          <button id="addVacation" class="btn primary">
-            Añadir
-          </button>
+          <label>Notas</label>
+          <input id="vacNotes" placeholder="Notas">
+          <button id="addVacation" class="btn primary">Añadir vacaciones</button>
+          <button type="button" class="btn" data-close="vacDialog">Cerrar</button>
         </section>
-
         <section>
           <div id="vacList"></div>
         </section>
@@ -165,80 +116,62 @@
     </form>
   </dialog>
 
-  <!-- Modal: Generador automático -->
   <dialog id="autoDialog">
     <form method="dialog" class="card">
-      <h2>Generador automático</h2>
-
-      <button id="openVacFromAuto" class="btn">
-        Revisar vacaciones
-      </button>
-
+      <div class="dialogHeader">
+        <h2>Generador automático</h2>
+        <button type="button" class="iconClose" data-close="autoDialog">×</button>
+      </div>
+      <button id="openVacFromAuto" class="btn">Revisar vacaciones</button>
       <label>
         <input id="overwriteMonth" type="checkbox">
         Sobrescribir mes
       </label>
-
-      <button id="runAuto" class="btn primary">
-        Generar
-      </button>
+      <button id="runAuto" class="btn primary">Generar</button>
     </form>
   </dialog>
 
-  <!-- Modal: Asignación por rango -->
   <dialog id="bulkDialog">
     <form method="dialog" class="card">
-      <h2>Asignación por rango</h2>
-
+      <div class="dialogHeader">
+        <h2>Asignación por rango</h2>
+        <button type="button" class="iconClose" data-close="bulkDialog">×</button>
+      </div>
+      <label>Desde</label>
       <input id="bulkFrom" type="date">
-
+      <label>Hasta</label>
       <input id="bulkTo" type="date">
-
+      <label>Turno</label>
       <select id="bulkShift">
         <option value="morning">Mañana</option>
         <option value="evening">Tarde</option>
       </select>
-
+      <label>Personas</label>
       <select id="bulkUsers" multiple size="8"></select>
-
-      <button id="runBulk" class="btn primary">
-        Aplicar
-      </button>
+      <button id="runBulk" class="btn primary">Aplicar</button>
     </form>
   </dialog>
 
-  <!-- Modal: Reporte de horas -->
   <dialog id="reportDialog">
     <form method="dialog" class="card wide">
-      <h2>Reporte de horas</h2>
-
+      <div class="dialogHeader">
+        <h2>Reporte de horas</h2>
+        <button type="button" class="iconClose" data-close="reportDialog">×</button>
+      </div>
       <div id="reportContent"></div>
-
-      <button id="downloadReport" class="btn primary">
-        Descargar CSV
-      </button>
+      <button id="downloadReport" class="btn primary">Descargar CSV</button>
     </form>
   </dialog>
 
-  <!-- Modal: Guardar en GitHub -->
   <dialog id="githubDialog">
     <form method="dialog" class="card">
-      <h2>Guardar en GitHub</h2>
-
-      <input
-        id="ghToken"
-        type="password"
-        placeholder="Token GitHub"
-      >
-
-      <input
-        id="commitMsg"
-        value="Update planning data"
-      >
-
-      <button id="runGitHub" class="btn primary">
-        Commit JSON
-      </button>
+      <div class="dialogHeader">
+        <h2>Guardar en GitHub</h2>
+        <button type="button" class="iconClose" data-close="githubDialog">×</button>
+      </div>
+      <input id="ghToken" type="password" placeholder="Token GitHub" autocomplete="off">
+      <input id="commitMsg" value="Update planning data">
+      <button id="runGitHub" class="btn primary">Commit JSON</button>
     </form>
   </dialog>
 

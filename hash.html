@@ -1,1 +1,17 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Hash admin</title></head><body><h1>Generar hash SHA-256</h1><input id="p" type="password"><button id="b">Generar</button><textarea id="o" rows="4" style="width:100%"></textarea><script>async function h(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}b.onclick=async()=>o.value=await h(p.value)</script></body></html>
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Hash admin</title></head>
+<body>
+  <h1>Generar hash SHA-256</h1>
+  <input id="p" type="password">
+  <button id="b">Generar</button>
+  <textarea id="o" rows="4" style="width:100%"></textarea>
+  <script>
+    async function h(t){
+      const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));
+      return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')
+    }
+    b.onclick=async()=>o.value=await h(p.value)
+  </script>
+</body>
+</html>
