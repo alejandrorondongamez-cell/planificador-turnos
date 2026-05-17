@@ -1,3 +1,3 @@
 # IT Planner v5.6 PRO
 
-Cambios: tooltip con lista completa de turnos, contadores M/T/V, fines de semana sombreados, festivo junto al número de día y generador mejorado para evitar tarde consecutiva y exceso de festivos.
+ZIP correcto con vista semana/mes, sombreado de fines de semana, tooltip completo, contadores M/T/V y generador semanal.
