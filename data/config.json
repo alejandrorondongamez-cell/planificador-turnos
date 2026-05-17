@@ -1,7 +1,7 @@
 {
   "appName": "IT Planner v5.2 FIX",
   "adminName": "Alejandro Rondón Gámez",
-  "adminPasswordHash": "REPLACE_WITH_SHA256_HASH",
+  "adminPasswordHash": "64535eae042bd308cc01e23125abfe7c05e2fe6b28b400b342c8d65105278171",
   "github": {
     "owner": "alejandrorondongamez-cell",
     "repo": "planificador-turnos",
