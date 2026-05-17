@@ -1,0 +1,41 @@
+{
+  "appName": "IT Planner v4 PRO",
+  "adminName": "Alejandro Rondón Gámez",
+  "adminPasswordHash": "REPLACE_WITH_SHA256_HASH",
+  "github": {
+    "owner": "REPLACE_OWNER_OR_ORG",
+    "repo": "shift-planner",
+    "branch": "main"
+  },
+  "rules": {
+    "workdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "coverage": {
+      "morning": 3,
+      "evening": 2
+    },
+    "holidayCoverageRelaxation": {
+      "enabled": true,
+      "morningMinus": 1,
+      "eveningMinus": 1,
+      "minimum": 1
+    },
+    "rotation": {
+      "morningWeeks": 3,
+      "eveningWeeks": 1
+    },
+    "eveningPairing": {
+      "seniorMin": 1,
+      "seniorMax": 1,
+      "standardMin": 1,
+      "standardMax": 1
+    },
+    "avoidConsecutiveEveningWeeks": true,
+    "avoidSamePairRepeated": true
+  }
+}
