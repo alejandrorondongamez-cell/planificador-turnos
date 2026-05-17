@@ -1,5 +1,5 @@
 {
-  "appName": "IT Planner v5.3 PRO",
+  "appName": "IT Planner v5.5 PRO",
   "adminName": "Alejandro Rondón Gámez",
   "adminPasswordHash": "64535eae042bd308cc01e23125abfe7c05e2fe6b28b400b342c8d65105278171",
   "github": {
@@ -7,6 +7,7 @@
     "repo": "planificador-turnos",
     "branch": "main"
   },
+  "serviceStartDate": "2026-07-15",
   "rules": {
     "workdays": [
       1,
@@ -15,11 +16,36 @@
       4,
       5
     ],
+    "maxPeopleOffPerWeek": 2,
+    "vacationMinNaturalDaysAfterServiceStart": 7,
+    "vacationMustBeMondayToSundayAfterServiceStart": true,
     "shiftHours": {
       "morning": 9,
       "evening": 9
     },
     "coverageByDayType": {
+      "standard": {
+        "morning": 4,
+        "evening": 2
+      },
+      "national": {
+        "morning": 2,
+        "evening": 2
+      },
+      "regional": {
+        "morning": 4,
+        "evening": 2
+      },
+      "local": {
+        "morning": 4,
+        "evening": 2
+      },
+      "global_closed": {
+        "morning": 0,
+        "evening": 0
+      }
+    },
+    "generationByDayType": {
       "standard": {
         "morning": 6,
         "evening": 2

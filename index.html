@@ -3,23 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>IT Planner v5.3 PRO</title>
+  <title>IT Planner v5.5 PRO</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <aside class="sidebar">
     <div class="brand">⚙ <strong id="appName">IT Planner</strong></div>
-
     <div id="modeBox" class="mode readonly">Modo lectura</div>
 
     <button id="btnUnlock" class="btn dark">🔐 Desbloquear edición</button>
     <button id="btnLock" class="btn adminOnly hidden">🔒 Bloquear edición</button>
     <button id="btnVacations" class="btn adminOnly hidden">🌴 Vacaciones / Ausencias</button>
     <button id="btnAuto" class="btn dark adminOnly hidden">🪄 Generador automático</button>
-    <button id="btnBulk" class="btn adminOnly hidden">📆 Asignación por rango</button>
     <button id="btnReport" class="btn adminOnly hidden">📊 Reporte de horas</button>
     <button id="btnGitHub" class="btn primary adminOnly hidden">☁ Guardar en GitHub</button>
-    <button id="btnExport" class="btn">⬇ Exportar JSON</button>
+    <button id="btnExport" class="btn adminOnly hidden">⬇ Exportar JSON</button>
 
     <section class="box">
       <h3>Equipo</h3>
@@ -31,7 +29,7 @@
       <div id="legend"></div>
     </section>
 
-    <section class="box">
+    <section id="rulesBox" class="box adminOnly hidden">
       <h3>Reglas activas</h3>
       <ul id="rulesList"></ul>
     </section>
@@ -96,10 +94,16 @@
         <h2>Vacaciones / Ausencias</h2>
         <button type="button" class="iconClose" data-close="vacDialog">×</button>
       </div>
+      <p class="hint">
+        Reglas: máximo 2 personas fuera por semana. A partir del 15/07/2026, las vacaciones deben ser de mínimo 7 días naturales consecutivos y de lunes a domingo.
+      </p>
       <div class="two">
         <section>
           <label>Persona</label>
           <select id="vacUser"></select>
+          <label>Días naturales de vacaciones disponibles</label>
+          <input id="vacTotal" type="number" min="0" step="1">
+          <button id="saveVacTotal" class="btn">Guardar días disponibles</button>
           <label>Desde</label>
           <input id="vacFrom" type="date">
           <label>Hasta</label>
@@ -122,33 +126,17 @@
         <h2>Generador automático</h2>
         <button type="button" class="iconClose" data-close="autoDialog">×</button>
       </div>
+      <p class="hint">Puedes generar el mes visible o indicar un periodo concreto de fechas.</p>
       <button id="openVacFromAuto" class="btn">Revisar vacaciones</button>
+      <label>Desde</label>
+      <input id="autoFrom" type="date">
+      <label>Hasta</label>
+      <input id="autoTo" type="date">
       <label>
         <input id="overwriteMonth" type="checkbox">
-        Sobrescribir mes
+        Sobrescribir asignaciones existentes en el periodo
       </label>
       <button id="runAuto" class="btn primary">Generar</button>
-    </form>
-  </dialog>
-
-  <dialog id="bulkDialog">
-    <form method="dialog" class="card">
-      <div class="dialogHeader">
-        <h2>Asignación por rango</h2>
-        <button type="button" class="iconClose" data-close="bulkDialog">×</button>
-      </div>
-      <label>Desde</label>
-      <input id="bulkFrom" type="date">
-      <label>Hasta</label>
-      <input id="bulkTo" type="date">
-      <label>Turno</label>
-      <select id="bulkShift">
-        <option value="morning">Mañana</option>
-        <option value="evening">Tarde</option>
-      </select>
-      <label>Personas</label>
-      <select id="bulkUsers" multiple size="8"></select>
-      <button id="runBulk" class="btn primary">Aplicar</button>
     </form>
   </dialog>
 
