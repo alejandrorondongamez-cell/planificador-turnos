@@ -1,10 +1,10 @@
 {
-  "appName": "IT Planner v5 PRO",
+  "appName": "IT Planner v5.2 FIX",
   "adminName": "Alejandro Rondón Gámez",
-  "adminPasswordHash": "64535eae042bd308cc01e23125abfe7c05e2fe6b28b400b342c8d65105278171",
+  "adminPasswordHash": "REPLACE_WITH_SHA256_HASH",
   "github": {
-    "owner": "AlejandroRondon",
-    "repo": "shift-planner",
+    "owner": "alejandrorondongamez-cell",
+    "repo": "planificador-turnos",
     "branch": "main"
   },
   "rules": {
@@ -40,17 +40,6 @@
         "morning": 0,
         "evening": 0
       }
-    },
-    "eveningPairing": {
-      "senior": 1,
-      "standard": 1
-    },
-    "avoidSeniorTogetherInEvening": true,
-    "balance": {
-      "eveningHours": true,
-      "holidayHours": true,
-      "samePairPenalty": true,
-      "consecutiveEveningPenalty": true
     }
   },
   "colors": {
