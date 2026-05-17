@@ -1,101 +1,29 @@
 <!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>IT Planner v5.8 PRO</title>
-  <link rel="stylesheet" href="css/styles.css">
-</head>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IT Planner v5.9 PRO</title>
+<link rel="stylesheet" href="css/styles.css"></head>
 <body>
-  <aside class="sidebar">
-    <div class="brand">⚙ <strong id="appName">IT Planner</strong></div>
-    <div id="modeBox" class="mode readonly">Modo lectura</div>
-
-    <button id="btnUnlock" class="btn dark">🔐 Desbloquear edición</button>
-    <button id="btnLock" class="btn adminOnly hidden">🔒 Bloquear edición</button>
-    <button id="btnVacations" class="btn adminOnly hidden">🌴 Vacaciones / Ausencias</button>
-    <button id="btnAuto" class="btn dark adminOnly hidden">🪄 Generador automático</button>
-    <button id="btnReport" class="btn adminOnly hidden">📊 Reporte de horas</button>
-    <button id="btnGitHub" class="btn primary adminOnly hidden">☁ Guardar en GitHub</button>
-    <button id="btnExport" class="btn adminOnly hidden">⬇ Exportar JSON</button>
-
-    <section class="box"><h3>Equipo</h3><div id="teamList"></div></section>
-    <section class="box"><h3>Leyenda</h3><div id="legend"></div></section>
-    <section id="rulesBox" class="box adminOnly hidden"><h3>Reglas activas</h3><ul id="rulesList"></ul></section>
-    <section class="box"><h3>Calidad del planning</h3><div id="qualityBox"></div></section>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <h1 id="monthTitle"></h1>
-      <div class="viewBtns">
-        <button id="viewMonth" class="active">Vista mes</button>
-        <button id="viewWeek">Vista semana</button>
-      </div>
-      <div class="nav">
-        <button id="prev">‹</button>
-        <button id="today">Hoy</button>
-        <button id="next">›</button>
-      </div>
-    </header>
-
-    <section id="alerts" class="alerts"></section>
-    <section id="calendar" class="calendar"></section>
-  </main>
-
-  <dialog id="adminDialog">
-    <form method="dialog" class="card">
-      <div class="dialogHeader"><h2>Acceso administrador</h2><button type="button" class="iconClose" data-close="adminDialog">×</button></div>
-      <p class="hint">Introduzca la contraseña de administrador.</p>
-      <input id="adminPassword" type="password" placeholder="Contraseña" autocomplete="off">
-      <button id="doUnlock" class="btn primary">Entrar</button>
-    </form>
-  </dialog>
-
-  <dialog id="vacDialog">
-    <form method="dialog" class="card wide">
-      <div class="dialogHeader"><h2>Vacaciones / Ausencias</h2><button type="button" class="iconClose" data-close="vacDialog">×</button></div>
-      <p class="hint">Regla recomendada: máximo 2 personas fuera por semana (si se supera, se avisa pero se permite). Desde 15/07/2026: mínimo 7 días naturales y lunes-domingo.</p>
-      <div class="two">
-        <section>
-          <label>Persona</label><select id="vacUser"></select>
-          <label>Días naturales disponibles</label><input id="vacTotal" type="number" min="0" step="1">
-          <button id="saveVacTotal" class="btn">Guardar días disponibles</button>
-          <label>Desde</label><input id="vacFrom" type="date">
-          <label>Hasta</label><input id="vacTo" type="date">
-          <label>Notas</label><input id="vacNotes" placeholder="Notas">
-          <button id="addVacation" class="btn primary">Añadir vacaciones</button>
-          <button type="button" class="btn" data-close="vacDialog">Cerrar</button>
-        </section>
-        <section><div id="vacList"></div></section>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog id="autoDialog">
-    <form method="dialog" class="card">
-      <div class="dialogHeader"><h2>Generador automático</h2><button type="button" class="iconClose" data-close="autoDialog">×</button></div>
-      <p class="hint">Genera por rango. Usa TODO el histórico del año (schedule.json) para equilibrar tardes y festivos legales a nivel anual.</p>
-      <label>Desde</label><input id="autoFrom" type="date">
-      <label>Hasta</label><input id="autoTo" type="date">
-      <label><input id="overwrite" type="checkbox"> Sobrescribir asignaciones existentes</label>
-      <button id="runAuto" class="btn primary">Generar</button>
-    </form>
-  </dialog>
-
-  <dialog id="reportDialog">
-    <form method="dialog" class="card wide">
-      <div class="dialogHeader"><h2>Reporte de horas</h2><button type="button" class="iconClose" data-close="reportDialog">×</button></div>
-      <div class="reportSwitch">
-        <button type="button" id="repMonth" class="seg active">Mes</button>
-        <button type="button" id="repYear" class="seg">Año</button>
-      </div>
-      <div id="reportMeta" class="hint"></div>
-      <div id="reportContent"></div>
-      <button id="downloadReport" class="btn primary">Descargar CSV</button>
-    </form>
-  </dialog>
-
-  <script src="js/app.bundle.js" defer></script>
-</body>
-</html>
+<aside class="sidebar">
+  <div class="brand">⚙ <strong id="appName">IT Planner</strong></div>
+  <div id="modeBox" class="mode readonly">Modo lectura</div>
+  <button id="btnUnlock" class="btn dark">🔐 Desbloquear edición</button>
+  <button id="btnLock" class="btn adminOnly hidden">🔒 Bloquear edición</button>
+  <button id="btnVacations" class="btn adminOnly hidden">🌴 Vacaciones / Ausencias</button>
+  <button id="btnAuto" class="btn dark adminOnly hidden">🪄 Generador automático</button>
+  <button id="btnReport" class="btn adminOnly hidden">📊 Reporte de horas</button>
+  <section class="box"><h3>Equipo</h3><div id="teamList"></div></section>
+  <section class="box"><h3>Calidad del planning</h3><div id="qualityBox"></div></section>
+</aside>
+<main class="main">
+  <header class="topbar">
+    <h1 id="monthTitle"></h1>
+    <div class="viewBtns"><button id="viewMonth" class="active">Vista mes</button><button id="viewWeek">Vista semana</button></div>
+    <div class="nav"><button id="prev">‹</button><button id="today">Hoy</button><button id="next">›</button></div>
+  </header>
+  <section id="alerts" class="alerts"></section>
+  <section id="calendar" class="calendar"></section>
+</main>
+<dialog id="adminDialog"><form method="dialog" class="card"><div class="dialogHeader"><h2>Acceso administrador</h2><button type="button" class="iconClose" data-close="adminDialog">×</button></div><input id="adminPassword" type="password" placeholder="Contraseña"><button id="doUnlock" class="btn primary">Entrar</button></form></dialog>
+<dialog id="autoDialog"><form method="dialog" class="card"><div class="dialogHeader"><h2>Generador automático</h2><button type="button" class="iconClose" data-close="autoDialog">×</button></div><label>Desde</label><input id="autoFrom" type="date"><label>Hasta</label><input id="autoTo" type="date"><label><input id="overwrite" type="checkbox"> Sobrescribir</label><button id="runAuto" class="btn primary">Generar</button></form></dialog>
+<dialog id="reportDialog"><form method="dialog" class="card wide"><div class="dialogHeader"><h2>Reporte de horas</h2><button type="button" class="iconClose" data-close="reportDialog">×</button></div><div class="reportSwitch"><button type="button" id="repMonth" class="seg">Mes</button><button type="button" id="repYear" class="seg active">Año</button></div><div id="reportMeta" class="hint"></div><div id="reportContent"></div><button id="downloadReport" class="btn primary">Descargar CSV</button></form></dialog>
+<script src="js/app.bundle.js" defer></script>
+</body></html>

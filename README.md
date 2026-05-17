@@ -1,5 +1,8 @@
-# IT Planner v5.8 PRO
+# IT Planner v5.9 PRO
 
-- Generador: balance anual usando todo el histórico del año en schedule.json.
-- Reporte: por defecto anual (con switch a mes), export CSV anual.
-- UI: vista semana con altura estable y cabecera de días resaltada.
+Restricciones tarde:
+- Prohibido 2 semanas seguidas de tarde.
+- Prohibido 3 semanas de tarde en un mismo mes.
+- 2ª semana de tarde en un mes: solo último recurso (penalización).
+
+Reporte anual incluido.
