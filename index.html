@@ -1,247 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Ops - Shift Planner Pro v3.2</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <style>
-        :root { --shift-morn: #e3f2fd; --shift-morn-text: #0d47a1; --shift-aft: #fff3e0; --shift-aft-text: #e65100; --holiday-bg: #fff5f5; --danger-color: #dc3545; }
-        body { background-color: #f4f6f9; font-size: 0.82rem; }
-        .sidebar { background: white; border-right: 1px solid #dee2e6; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
-        .calendar-table { table-layout: fixed; background: white; border-width: 1px 0 0 1px; width: 100%; border: 1px solid #dee2e6; }
-        .calendar-cell { height: 130px; border: 1px solid #dee2e6; padding: 4px; vertical-align: top; transition: 0.2s; position: relative; }
-        .calendar-cell:hover { background-color: #f1f3f5; cursor: pointer; }
-        .day-num { font-weight: bold; font-size: 1rem; }
-        .badge-shift { display: block; padding: 2px 5px; border-radius: 3px; margin-bottom: 2px; font-size: 0.65rem; font-weight: 500; border-left: 3px solid transparent; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        .m-shift { background: var(--shift-morn); color: var(--shift-morn-text); border-left-color: var(--shift-morn-text); }
-        .t-shift { background: var(--shift-aft); color: var(--shift-aft-text); border-left-color: var(--shift-aft-text); }
-        .v-shift { background: #eee; color: #666; border-left-color: #999; font-style: italic; }
-        .rule-violation { border: 2px solid var(--danger-color) !important; background-color: #fff8f8 !important; }
-        .holiday-cell { background-color: var(--holiday-bg); }
-        .holiday-label { font-size: 0.6rem; color: #d32f2f; font-weight: bold; display: block; }
-        .senior-badge { border: 1px solid #0d47a1; color: #0d47a1; font-size: 0.5rem; padding: 0 2px; border-radius: 3px; margin-right: 3px; vertical-align: middle; }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>IT Planner v5 PRO</title>
+<link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+<aside class="sidebar">
+  <div class="brand"><span class="gear">⚙</span><strong id="appName">IT Planner</strong></div>
+  <div id="modeBox" class="mode readonly">Modo lectura</div>
+  <button id="btnUnlock" class="btn dark">🔐 Desbloquear edición</button>
+  <button id="btnLock" class="btn adminOnly hidden">🔒 Bloquear edición</button>
+  <button id="btnVacations" class="btn adminOnly hidden">🌴 Vacaciones / Ausencias</button>
+  <button id="btnAuto" class="btn dark adminOnly hidden">🪄 Generador automático</button>
+  <button id="btnBulk" class="btn adminOnly hidden">📆 Asignación por rango</button>
+  <button id="btnReport" class="btn adminOnly hidden">📊 Reporte de horas</button>
+  <button id="btnGitHub" class="btn primary adminOnly hidden">☁ Guardar en GitHub</button>
+  <button id="btnExport" class="btn">⬇ Exportar JSON</button>
 
-<div class="container-fluid">
-    <div class="row">
-        <nav class="col-md-3 col-lg-2 sidebar p-3 no-print">
-            <h5 class="text-primary mb-3"><i class="bi bi-cpu-fill me-2"></i>IT Planner v3.2</h5>
-            
-            <div class="d-grid gap-2 mb-3">
-                <button class="btn btn-dark btn-sm" onclick="openGenerator()">
-                    <i class="bi bi-magic me-2"></i>Generador Automático
-                </button>
-                <button class="btn btn-primary btn-sm" onclick="exportData()">
-                    <i class="bi bi-cloud-upload me-2"></i>Guardar en GitHub
-                </button>
-            </div>
+  <section class="box"><h3>Equipo</h3><div id="teamList" class="team"></div></section>
+  <section class="box"><h3>Leyenda</h3><div id="legend"></div></section>
+  <section class="box"><h3>Reglas activas</h3><ul id="rulesList"></ul></section>
+  <section class="box"><h3>Calidad del planning</h3><div id="qualityBox"></div></section>
+</aside>
 
-            <h6 class="border-bottom pb-1 mb-2">Equipo</h6>
-            <div id="team-list" class="list-group list-group-flush small mb-3"></div>
+<main class="main">
+  <header class="topbar">
+    <h1 id="monthTitle"></h1>
+    <div class="nav"><button id="prev">‹</button><button id="today">Hoy</button><button id="next">›</button></div>
+  </header>
+  <section id="alerts" class="alerts"></section>
+  <section id="calendar" class="calendar"></section>
+</main>
 
-            <div class="card bg-light p-2 mb-3 small">
-                <strong>Reglas Activas:</strong>
-                <ul class="mb-0 ps-3 mt-1">
-                    <li>3 sem. Mañana / 1 sem. Tarde</li>
-                    <li>Tarde: 1 Senior + 1 Junior</li>
-                </ul>
-            </div>
-        </nav>
+<dialog id="adminDialog" class="dialog"><form method="dialog" class="card small">
+  <div class="dialogHead"><h2>Acceso administrador</h2><button class="x" value="close">×</button></div>
+  <p class="hint">No se almacena contraseña en texto plano. La contraseña se valida contra SHA-256. La seguridad real de guardado la aporta GitHub: solo quien tenga permiso de escritura y token podrá publicar cambios.</p>
+  <label>Contraseña<input id="adminPassword" type="password" autocomplete="current-password" /></label>
+  <menu><button id="doUnlock" class="btn primary" value="default">Entrar</button></menu>
+</form></dialog>
 
-        <main class="col-md-9 col-lg-10 ms-sm-auto px-md-4 py-3">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 id="current-month-label" class="mb-0">Mes Año</h2>
-                <div class="btn-group">
-                    <button class="btn btn-outline-primary btn-sm" onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
-                    <button class="btn btn-primary btn-sm" onclick="goToToday()">Hoy</button>
-                    <button class="btn btn-outline-primary btn-sm" onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
-                </div>
-            </div>
+<dialog id="dayDialog" class="dialog"><form method="dialog" class="card wide">
+  <div class="dialogHead"><h2 id="dayTitle"></h2><button class="x" value="close">×</button></div>
+  <div id="dayMeta" class="hint"></div><div id="dayWarnings"></div>
+  <div class="twoCols"><section><h3>Mañana</h3><div id="morningChecks"></div></section><section><h3>Tarde</h3><div id="eveningChecks"></div></section></div>
+  <menu><button id="saveDay" class="btn primary adminOnly" value="default">Guardar cambios</button></menu>
+</form></dialog>
 
-            <div class="table-responsive">
-                <table class="calendar-table">
-                    <thead>
-                        <tr>
-                            <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th><th>Dom</th>
-                        </tr>
-                    </thead>
-                    <tbody id="calendar-body"></tbody>
-                </table>
-            </div>
-        </main>
-    </div>
-</div>
+<dialog id="vacDialog" class="dialog"><form method="dialog" class="card wide">
+  <div class="dialogHead"><h2>Vacaciones / Ausencias</h2><button class="x" value="close">×</button></div>
+  <div class="twoCols">
+    <section><h3>Añadir vacaciones</h3><label>Persona<select id="vacUser"></select></label><label>Desde<input id="vacFrom" type="date"></label><label>Hasta<input id="vacTo" type="date"></label><label>Notas<input id="vacNotes" placeholder="Opcional"></label><button id="addVacation" class="btn primary" value="default">Añadir</button></section>
+    <section><h3>Vacaciones registradas</h3><div id="vacList"></div></section>
+  </div>
+</form></dialog>
 
-<div class="modal fade" id="generatorModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header"><h5>Generador de Rotación Automática</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <p class="small text-muted">Este proceso aplicará la rotación 3:1 respetando las parejas Senior/Junior.</p>
-                <div class="mb-3">
-                    <label class="form-label">Fecha de inicio (Lunes sugerido)</label>
-                    <input type="date" id="gen-start-date" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Número de semanas a generar</label>
-                    <select id="gen-weeks" class="form-select">
-                        <option value="4">4 semanas (1 ciclo)</option>
-                        <option value="8">8 semanas (2 ciclos)</option>
-                        <option value="12">12 semanas (3 ciclos)</option>
-                    </select>
-                </div>
-                <div class="alert alert-warning small">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Esto sobreescribirá turnos existentes en el rango seleccionado.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-dark w-100" onclick="runAutoGenerator()">Generar y Aplicar</button>
-            </div>
-        </div>
-    </div>
-</div>
+<dialog id="autoDialog" class="dialog"><form method="dialog" class="card small">
+  <div class="dialogHead"><h2>Generador automático</h2><button class="x" value="close">×</button></div>
+  <p class="hint">Antes de generar, registra vacaciones. El generador respeta vacaciones y festivos. No modifica vacaciones. Solo modifica el planning del mes visible.</p>
+  <button id="openVacFromAuto" class="btn" value="default">🌴 Revisar vacaciones antes de generar</button>
+  <label><input id="overwriteMonth" type="checkbox"> Sobrescribir asignaciones existentes del mes</label>
+  <p class="hint">Si no marcas sobrescribir, los días ya planificados manualmente se respetan.</p>
+  <menu><button id="runAuto" class="btn primary" value="default">Generar mes</button></menu>
+</form></dialog>
 
-<div class="modal fade" id="editModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header bg-light"><h5 class="modal-title">Asignación Manual</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row"><div class="col-md-4"><label class="fw-bold text-primary">Mañana</label><div id="morn-selectors"></div></div><div class="col-md-4"><label class="fw-bold text-warning">Tarde</label><div id="aft-selectors"></div></div><div class="col-md-4"><label class="fw-bold text-secondary">Vacaciones</label><div id="vac-selectors"></div></div></div></div><div class="modal-footer"><button class="btn btn-primary w-100" onclick="saveDayChanges()">Aplicar</button></div></div></div></div>
-<div class="modal fade" id="exportModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5>Guardar en GitHub</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><textarea id="json-output" class="form-control" rows="10" readonly style="font-family:monospace; font-size:11px;"></textarea></div><div class="modal-footer"><button class="btn btn-success" onclick="copyToClipboard()">Copiar al Portapapeles</button></div></div></div></div>
+<dialog id="bulkDialog" class="dialog"><form method="dialog" class="card small">
+  <div class="dialogHead"><h2>Asignación por rango</h2><button class="x" value="close">×</button></div>
+  <label>Desde<input id="bulkFrom" type="date"></label><label>Hasta<input id="bulkTo" type="date"></label><label>Turno<select id="bulkShift"><option value="morning">Mañana</option><option value="evening">Tarde</option></select></label><label>Personas<select id="bulkUsers" multiple size="8"></select></label>
+  <menu><button id="runBulk" class="btn primary" value="default">Aplicar</button></menu>
+</form></dialog>
 
-<script>
-// --- CONFIGURACIÓN DE EQUIPO Y ROLES ---
-const team = [
-    { id: 1, name: "Max Sendra", isSenior: true },
-    { id: 2, name: "Carlos Guerrero", isSenior: false },
-    { id: 3, name: "Alejandro G. Torres", isSenior: false },
-    { id: 4, name: "Sergio de la Casa Redondo", isSenior: false },
-    { id: 5, name: "Alejandro G. Valdes", isSenior: true },
-    { id: 6, name: "Hector Adarbe", isSenior: true },
-    { id: 7, name: "Pablo Terron", isSenior: true },
-    { id: 8, name: "Alejandro Lopez", isSenior: false }
-];
+<dialog id="reportDialog" class="dialog"><form method="dialog" class="card wide">
+  <div class="dialogHead"><h2>Reporte de horas</h2><button class="x" value="close">×</button></div>
+  <div id="reportContent"></div><menu><button id="downloadReport" class="btn primary" value="default">Descargar CSV</button></menu>
+</form></dialog>
 
-// Parejas para el turno de tarde (1 Senior + 1 Junior)
-const pairs = [
-    { s: 1, j: 2 }, // Max + Carlos
-    { s: 5, j: 3 }, // Valdes + Torres
-    { s: 6, j: 4 }, // Hector + Sergio
-    { s: 7, j: 8 }  // Pablo + Lopez
-];
-
-let viewDate = new Date(); 
-let schedule = JSON.parse(localStorage.getItem('shiftData')) || {};
-const holidays = { "2026-05-01": "Día del Trabajo", "2026-05-15": "San Isidro" };
-
-// --- MOTOR DE GENERACIÓN AUTOMÁTICA ---
-function openGenerator() {
-    new bootstrap.Modal(document.getElementById('generatorModal')).show();
-}
-
-function runAutoGenerator() {
-    const startStr = document.getElementById('gen-start-date').value;
-    const weeks = parseInt(document.getElementById('gen-weeks').value);
-    
-    if(!startStr) return alert("Selecciona una fecha de inicio");
-
-    let currentDate = new Date(startStr);
-
-    for (let w = 0; w < weeks; w++) {
-        // En cada semana del ciclo de 4, una pareja distinta va de tarde
-        let afternoonPairIndex = w % 4; 
-        let afternoonPair = pairs[afternoonPairIndex];
-
-        // Lunes a Viernes (5 días)
-        for (let d = 0; d < 5; d++) {
-            let date = new Date(currentDate);
-            date.setDate(currentDate.getDate() + (w * 7) + d);
-            let dateKey = date.toISOString().split('T')[0];
-
-            // Mañana: Todos menos la pareja de tarde
-            let morningTeam = team
-                .map(t => t.id)
-                .filter(id => id !== afternoonPair.s && id !== afternoonPair.j);
-
-            schedule[dateKey] = {
-                m: morningTeam,
-                a: [afternoonPair.s, afternoonPair.j],
-                v: schedule[dateKey]?.v || [] // Preservar vacaciones si ya estaban marcadas
-            };
-        }
-    }
-
-    localStorage.setItem('shiftData', JSON.stringify(schedule));
-    renderCalendar();
-    bootstrap.Modal.getInstance(document.getElementById('generatorModal')).hide();
-    alert("Turnos generados con éxito siguiendo el patrón de parejas.");
-}
-
-// --- RENDERIZADO Y OTROS (Basado en v3.1) ---
-function renderCalendar() {
-    const year = viewDate.getFullYear();
-    const month = viewDate.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    document.getElementById('current-month-label').innerText = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(viewDate).toUpperCase();
-    const body = document.getElementById('calendar-body');
-    body.innerHTML = '';
-    let rows = '<tr>';
-    let startOffset = firstDay === 0 ? 6 : firstDay - 1; 
-    for(let i=0; i < startOffset; i++) rows += '<td class="calendar-cell bg-light"></td>';
-    for(let d=1; d <= daysInMonth; d++) {
-        let dateKey = `${year}-${(month+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
-        const dayData = schedule[dateKey] || { m: [], a: [], v: [] };
-        const isHoliday = holidays[dateKey];
-        const realM = dayData.m.filter(id => !dayData.v.includes(id)).length;
-        const realA = dayData.a.filter(id => !dayData.v.includes(id)).length;
-        const hasError = (d <= 31 && new Date(dateKey).getDay() !== 0 && new Date(dateKey).getDay() !== 6) && (realM < 3 || realA < 2);
-
-        rows += `<td class="calendar-cell ${hasError ? 'rule-violation' : ''} ${isHoliday ? 'holiday-cell' : ''}" onclick="openEdit('${dateKey}')">
-                <div class="d-flex justify-content-between"><span class="day-num">${d}</span>${hasError ? '<i class="bi bi-exclamation-circle-fill text-danger"></i>' : ''}</div>
-                ${isHoliday ? `<span class="holiday-label">${isHoliday}</span>` : ''}
-                <div class="mt-1">
-                    ${dayData.m.map(id => `<span class="badge-shift m-shift">${team.find(t=>t.id===id).isSenior?'<span class="senior-badge">S</span>':''}${team.find(t=>t.id===id).name}</span>`).join('')}
-                    ${dayData.a.map(id => `<span class="badge-shift t-shift">${team.find(t=>t.id===id).isSenior?'<span class="senior-badge">S</span>':''}${team.find(t=>t.id===id).name}</span>`).join('')}
-                    ${dayData.v.map(id => `<span class="badge-shift v-shift">OFF: ${team.find(t=>t.id===id).name}</span>`).join('')}
-                </div></td>`;
-        if ((d + startOffset) % 7 === 0) rows += '</tr><tr>';
-    }
-    body.innerHTML = rows + '</tr>';
-    renderTeamList();
-}
-
-function renderTeamList() {
-    document.getElementById('team-list').innerHTML = team.map(p => `
-        <div class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center">
-            <span>${p.isSenior?'<span class="senior-badge">S</span>':''}${p.name}</span>
-            <span class="badge bg-light text-dark border">22d</span>
-        </div>`).join('');
-}
-
-function openEdit(dateKey) {
-    selectedDateKey = dateKey;
-    const dayData = schedule[dateKey] || { m: [], a: [], v: [] };
-    const gen = (type) => team.map(p => `<div class="form-check small"><input class="form-check-input" type="checkbox" value="${p.id}" id="${type}-${p.id}" ${dayData[type].includes(p.id)?'checked':''}>${p.name}</div>`).join('');
-    document.getElementById('morn-selectors').innerHTML = gen('m');
-    document.getElementById('aft-selectors').innerHTML = gen('a');
-    document.getElementById('vac-selectors').innerHTML = gen('v');
-    new bootstrap.Modal(document.getElementById('editModal')).show();
-}
-
-function saveDayChanges() {
-    const get = (t) => Array.from(document.querySelectorAll(`input[id^="${t}-"]:checked`)).map(e => parseInt(e.value));
-    schedule[selectedDateKey] = { m: get('m'), a: get('a'), v: get('v') };
-    localStorage.setItem('shiftData', JSON.stringify(schedule));
-    renderCalendar();
-    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-}
-
-function changeMonth(o){ viewDate.setMonth(viewDate.getMonth()+o); renderCalendar(); }
-function goToToday(){ viewDate = new Date(); renderCalendar(); }
-function exportData(){ document.getElementById('json-output').value = JSON.stringify(schedule, null, 2); new bootstrap.Modal(document.getElementById('exportModal')).show(); }
-function copyToClipboard(){ const ta = document.getElementById('json-output'); ta.select(); document.execCommand('copy'); alert("Copiado."); }
-document.addEventListener('DOMContentLoaded', renderCalendar);
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<dialog id="githubDialog" class="dialog"><form method="dialog" class="card small">
+  <div class="dialogHead"><h2>Guardar en GitHub</h2><button class="x" value="close">×</button></div>
+  <p class="hint">Usa un Fine-grained PAT con permiso Contents: Read and Write solo en este repo. El token no se guarda.</p>
+  <label>Token<input id="ghToken" type="password" autocomplete="off"></label><label>Mensaje commit<input id="commitMsg" value="Update planning data"></label>
+  <menu><button id="runGitHub" class="btn primary" value="default">Commit JSON</button></menu>
+</form></dialog>
+<script type="module" src="js/app.js"></script>
+</body></html>

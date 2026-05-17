@@ -1,9 +1,9 @@
 {
-  "appName": "IT Planner v4 PRO",
+  "appName": "IT Planner v5 PRO",
   "adminName": "Alejandro Rondón Gámez",
-  "adminPasswordHash": "64535eae042bd308cc01e23125abfe7c05e2fe6b28b400b342c8d65105278171",
+  "adminPasswordHash": "REPLACE_WITH_SHA256_HASH",
   "github": {
-    "owner": "AlejandroRondon",
+    "owner": "REPLACE_OWNER_OR_ORG",
     "repo": "shift-planner",
     "branch": "main"
   },
@@ -15,27 +15,49 @@
       4,
       5
     ],
-    "coverage": {
-      "morning": 3,
-      "evening": 2
+    "shiftHours": {
+      "morning": 9,
+      "evening": 9
     },
-    "holidayCoverageRelaxation": {
-      "enabled": true,
-      "morningMinus": 1,
-      "eveningMinus": 1,
-      "minimum": 1
-    },
-    "rotation": {
-      "morningWeeks": 3,
-      "eveningWeeks": 1
+    "coverageByDayType": {
+      "standard": {
+        "morning": 6,
+        "evening": 2
+      },
+      "national": {
+        "morning": 2,
+        "evening": 2
+      },
+      "regional": {
+        "morning": 4,
+        "evening": 2
+      },
+      "local": {
+        "morning": 4,
+        "evening": 2
+      },
+      "global_closed": {
+        "morning": 0,
+        "evening": 0
+      }
     },
     "eveningPairing": {
-      "seniorMin": 1,
-      "seniorMax": 1,
-      "standardMin": 1,
-      "standardMax": 1
+      "senior": 1,
+      "standard": 1
     },
-    "avoidConsecutiveEveningWeeks": true,
-    "avoidSamePairRepeated": true
+    "avoidSeniorTogetherInEvening": true,
+    "balance": {
+      "eveningHours": true,
+      "holidayHours": true,
+      "samePairPenalty": true,
+      "consecutiveEveningPenalty": true
+    }
+  },
+  "colors": {
+    "global_closed": "#e5e7eb",
+    "national": "#fff1f2",
+    "regional": "#fff7ed",
+    "local": "#eff6ff",
+    "vacation": "#f0fdf4"
   }
 }

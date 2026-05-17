@@ -1,28 +1,3 @@
-import { iso, isWorkday, isUnavailable } from './utils.js';
-import { evaluateMonth } from './rules.js';
-export function generateMonthSchedule(y,m,state,{overwrite=false}={}){
- const schedule=structuredClone(state.schedule||{}); const users=state.users; const seniors=users.filter(u=>u.role==='senior').map(u=>u.id); const standards=users.filter(u=>u.role!=='senior').map(u=>u.id);
- const weeks=[]; let current=[];
- for(let d=new Date(y,m,1); d.getMonth()===m; d.setDate(d.getDate()+1)){const day=iso(d); if(!isWorkday(day,state)) continue; const dow=d.getDay()||7; if(dow===1&&current.length){weeks.push(current);current=[]} current.push(day)} if(current.length) weeks.push(current);
- let seniorIdx=0, standardIdx=0, lastEvening=new Set();
- for(const week of weeks){
-   const pair=pickPair(week,seniors,standards,users,state,lastEvening,seniorIdx,standardIdx); seniorIdx=pair.nextSenior; standardIdx=pair.nextStandard; lastEvening=new Set(pair.ids);
-   for(const day of week){
-     if(!overwrite && schedule[day] && ((schedule[day].morning||[]).length||(schedule[day].evening||[]).length)) continue;
-     const unavailable=new Set(users.filter(u=>isUnavailable(u,day,state)).map(u=>u.id));
-     const evening=pair.ids.filter(id=>!unavailable.has(id));
-     const morning=users.map(u=>u.id).filter(id=>!evening.includes(id)&&!unavailable.has(id));
-     schedule[day]={morning,evening};
-   }
- }
- const tmp={...state,schedule}; return {schedule,issues:evaluateMonth(y,m,tmp).issues};
-}
-function pickPair(week,seniors,standards,users,state,lastEvening,si,ti){
- const seniorCandidates=rotate(seniors,si).filter(id=>!lastEvening.has(id)); const standardCandidates=rotate(standards,ti).filter(id=>!lastEvening.has(id));
- for(const s of seniorCandidates.length?seniorCandidates:rotate(seniors,si)) for(const t of standardCandidates.length?standardCandidates:rotate(standards,ti)){
-   if(week.some(day=>isUnavailable(users.find(u=>u.id===s),day,state)||isUnavailable(users.find(u=>u.id===t),day,state))) continue;
-   return {ids:[s,t],nextSenior:(seniors.indexOf(s)+1)%seniors.length,nextStandard:(standards.indexOf(t)+1)%standards.length};
- }
- return {ids:[seniors[si%seniors.length],standards[ti%standards.length]],nextSenior:(si+1)%seniors.length,nextStandard:(ti+1)%standards.length};
-}
-function rotate(arr,start){return arr.map((_,i)=>arr[(start+i)%arr.length])}
+import {iso,isWorkday,isUnavailable,coverageForDay,holidayType} from './utils.js';import {evaluateMonth} from './rules.js';import {buildReport} from './report.js';
+export function generateMonthSchedule(y,m,state,{overwrite=false}={}){let schedule=structuredClone(state.schedule||{});let lastPair=new Set();for(let d=new Date(y,m,1);d.getMonth()===m;d.setDate(d.getDate()+1)){const day=iso(d);if(!isWorkday(day,state))continue;if(!overwrite&&schedule[day]&&((schedule[day].morning||[]).length||(schedule[day].evening||[]).length))continue;const cov=coverageForDay(day,state);if(holidayType(day,state)==='global_closed'){schedule[day]={morning:[],evening:[]};continue;}const available=state.users.filter(u=>!isUnavailable(u,day));const tempState={...state,schedule};const report=buildReport(y,m,tempState);const score=(id,kind)=>{const r=report.find(x=>x.id===id)||{};let s=0;if(kind==='holiday')s+=(r.holidayHours||0)*10;if(kind==='evening')s+=(r.eveningHours||0)*5;if(lastPair.has(id))s+=20;return s};const seniors=available.filter(u=>u.role==='senior').sort((a,b)=>score(a.id,'evening')-score(b.id,'evening'));const standards=available.filter(u=>u.role!=='senior').sort((a,b)=>score(a.id,'evening')-score(b.id,'evening'));let evening=[];if(cov.evening>=2&&seniors.length&&standards.length){evening=[seniors[0].id,standards[0].id]}else{evening=available.sort((a,b)=>score(a.id,'evening')-score(b.id,'evening')).slice(0,cov.evening).map(u=>u.id)}lastPair=new Set(evening);let rest=available.filter(u=>!evening.includes(u.id));const type=holidayType(day,state);rest.sort((a,b)=>score(a.id,type==='standard'?'morning':'holiday')-score(b.id,type==='standard'?'morning':'holiday'));let morning=rest.slice(0,cov.morning).map(u=>u.id);schedule[day]={morning,evening};}
+ const tmp={...state,schedule};return {schedule,issues:evaluateMonth(y,m,tmp).issues}}
