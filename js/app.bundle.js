@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const S = { users: [], config: null, holidays: [], holidayMap: new Map(), schedule: {}, date: new Date(), admin:false, view:'month', repMode:'year', lastReport: [] };
+  const S = { users: [], config: null, holidays: [], holidayMap: new Map(), schedule: {}, date: new Date(), admin: false, view: 'month', repMode: 'year', lastReport: [] };
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
 
@@ -30,6 +30,7 @@
   const roleOf = id => S.users.find(u=>u.id===id)?.role || 'standard';
 
   const isUnavailable = (user, day) => (user.timeOff||[]).some(x=>x.type==='vacation' && day>=x.start && day<=x.end);
+  const vacUsers = day => S.users.filter(u=>isUnavailable(u,day));
 
   function weekStart(day){ const d=parseISO(day); const off=(d.getDay()+6)%7; return iso(addDays(d,-off)); }
   function weekEnd(ws){ return iso(addDays(parseISO(ws),6)); }
@@ -53,6 +54,24 @@
     return c;
   }
 
+  function vacationWarnings(user,a,b){
+    const w=[];
+    if(a>=S.config.serviceStartDate){
+      const days=Math.floor((parseISO(b)-parseISO(a))/86400000)+1;
+      if(days < S.config.rules.vacationMinNaturalDaysAfterServiceStart) w.push(`A partir del ${S.config.serviceStartDate}: mínimo recomendado ${S.config.rules.vacationMinNaturalDaysAfterServiceStart} días.`);
+      if(S.config.rules.vacationMustBeMondayToSundayAfterServiceStart && (dow(a)!==1 || dow(b)!==7)) w.push(`A partir del ${S.config.serviceStartDate}: recomendado lunes→domingo.`);
+    }
+    const weeks=weeksTouched(a,b);
+    for(const ws of weeks){
+      const we=weekEnd(ws);
+      const set=new Set();
+      S.users.forEach(u => (u.timeOff||[]).filter(x=>x.type==='vacation').forEach(v=>{ if(v.start<=we && v.end>=ws) set.add(u.id); }));
+      if(a<=we && b>=ws) set.add(user.id);
+      if(set.size > S.config.rules.maxPeopleOffPerWeek) w.push(`Semana ${ws}→${we}: ${set.size} fuera (${[...set].map(nameOf).join(', ')}).`);
+    }
+    return w;
+  }
+
   function reportRange(from,to,schedule=S.schedule){
     const rows=S.users.map(u=>({id:u.id,name:u.name,morningDays:0,eveningDays:0,morningHours:0,eveningHours:0,legalHolidayDays:0,legalHolidayHours:0,impactHolidayDays:0,impactHolidayHours:0,totalHours:0}));
     const map=new Map(rows.map(r=>[r.id,r]));
@@ -74,6 +93,7 @@
     }
     return rows;
   }
+
   function reportMonth(y,m,schedule=S.schedule){ return reportRange(iso(new Date(y,m,1)), iso(new Date(y,m+1,0)), schedule); }
   function reportYear(y,schedule=S.schedule){ return reportRange(`${y}-01-01`, `${y}-12-31`, schedule); }
 
@@ -111,22 +131,22 @@
     const scoreId = (id) => {
       const mr=monthRep.find(r=>r.id===id)||{};
       const yr=yearRep.find(r=>r.id===id)||{};
-      // Hard constraints
+      // Hard restrictions
       if(S.config.rules.noConsecutiveEveningWeeks && prevEvening.has(id)) return 1e12;
       const mw=monthEveningWeekCount(id, monthKey, schedule);
-      if(mw >= maxHard) return 1e12; // 3rd evening week prohibited
+      if(mw >= maxHard) return 1e12; // 3rd week prohibited
 
-      // Soft scoring (annual dominates)
+      // Annual balance dominates
       let s=0;
-      s += (yr.eveningDays||0)*400;
-      s += (mr.eveningDays||0)*100;
-      s += (yr.legalHolidayHours||0)*40;
-      s += (mr.legalHolidayHours||0)*80;
-      if(mw==1) s += 5e7; // 2nd evening week only last resort
+      s += (yr.eveningDays||0)*500;
+      s += (mr.eveningDays||0)*120;
+      s += (yr.legalHolidayHours||0)*60;
+      s += (mr.legalHolidayHours||0)*120;
+      if(mw==1) s += 5e7; // 2nd week only last resort
       return s;
     };
 
-    let pairs=candidatePairs(availWeek);
+    const pairs=candidatePairs(availWeek);
     if(!pairs.length){
       const ids=availWeek.map(u=>u.id).sort((a,b)=>scoreId(a)-scoreId(b));
       return ids.slice(0,2);
@@ -154,8 +174,8 @@
       const sample=days.find(d=>hType(d)!=='global_closed')||days[0];
       if(hType(sample)==='global_closed') continue;
 
-      const availableWeek=S.users.filter(u=>days.some(d=>!isUnavailable(u,d)));
-      const pair=chooseEveningPair(ws, availableWeek, schedule);
+      const availWeek=S.users.filter(u=>days.some(d=>!isUnavailable(u,d)));
+      const pair=chooseEveningPair(ws, availWeek, schedule);
       if(pair.length!=2){
         failures.push(`Semana ${ws}: no hay par válido de tarde sin romper restricciones.`);
         continue;
@@ -200,33 +220,119 @@
     cal.className=`calendar ${S.view==='week'?'week':''}`;
     cal.innerHTML='';
     ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(d=>cal.insertAdjacentHTML('beforeend',`<div class="dow">${d}</div>`));
+
     for(const day of daysToRender()){
       const d=parseISO(day);
       const sc=S.schedule[day]||{morning:[],evening:[]};
+      const h=holiday(day);
+      const vac=vacUsers(day);
       const ev=evalDay(day);
+
       const div=document.createElement('div');
-      div.className=`day ${S.view==='month'&&d.getMonth()!==m?'out ':''} ${isWeekend(day)?'weekend ':''} ${ev.issues.length?'issue':''}`;
+      div.className=`day ${S.view==='month'&&d.getMonth()!==m?'out ':''}${hType(day)} ${isWeekend(day)?'weekend ':''}${vac.length?'hasVacation ':''}${ev.issues.length?'issue':''}`;
+
       const mn=(sc.morning||[]).map(nameOf).join(', ');
       const tn=(sc.evening||[]).map(nameOf).join(', ');
-      div.innerHTML=`${ev.issues.length?'<span class="issueDot">!</span>':''}<div class="dayHeader"><span class="daynum">${d.getDate()}</span></div>${sc.morning?.length?`<div class="shift" title="${mn}">M | ${mn}</div>`:''}${sc.evening?.length?`<div class="shift evening" title="${tn}">T | ${tn}</div>`:''}<span class="counts"><span class="count countM">M=${(sc.morning||[]).length}</span><span class="count countT">T=${(sc.evening||[]).length}</span></span>`;
+      const vn=vac.map(u=>u.name).join(', ');
+
+      div.innerHTML=`${ev.issues.length?'<span class="issueDot">!</span>':''}
+        <div class="dayHeader"><span class="daynum">${d.getDate()}</span>${h?`<span class="holidayInline" title="${h.name}">${h.name}</span>`:''}</div>
+        ${vac.length?`<div class="vacTag" title="${vn}">Vacaciones: ${vn}</div>`:''}
+        ${(sc.morning||[]).length?`<div class="shift" title="${mn}">M | ${mn}</div>`:''}
+        ${(sc.evening||[]).length?`<div class="shift evening" title="${tn}">T | ${tn}</div>`:''}
+        ${vac.length?`<span class="vacCount" title="${vn}">V=${vac.length}</span>`:''}
+        <span class="counts"><span class="count countM" title="${mn}">M=${(sc.morning||[]).length}</span><span class="count countT" title="${tn}">T=${(sc.evening||[]).length}</span></span>
+      `;
+
+      div.onclick=()=>openDay(day);
       cal.appendChild(div);
     }
   }
 
+  function openDay(day){
+    $('#dayTitle').textContent=day;
+    $('#dayMeta').textContent=`Mínimo alerta: ${minCov(day).morning}/${minCov(day).evening} · Objetivo: ${genCov(day).morning}/${genCov(day).evening}`;
+    $('#dayWarnings').innerHTML=evalDay(day).issues.map(i=>`<div class="warn">${i.message}</div>`).join('');
+
+    const sc=S.schedule[day]||{morning:[],evening:[]};
+    fillChecks('#morningChecks', sc.morning);
+    fillChecks('#eveningChecks', sc.evening);
+
+    $('#saveDay').onclick=e=>{
+      e.preventDefault();
+      if(!S.admin) return;
+      S.schedule[day]={
+        morning: selected('#morningChecks'),
+        evening: selected('#eveningChecks')
+      };
+      $('#dayDialog').close();
+      render();
+    };
+
+    $('#dayDialog').showModal();
+  }
+
+  function fillChecks(container, selectedIds){
+    $(container).innerHTML=S.users.map(u=>{
+      const checked=selectedIds.includes(u.id)?'checked':'';
+      const disabled=!S.admin?'disabled':'';
+      return `<label class="check"><input type="checkbox" value="${u.id}" ${checked} ${disabled}> ${u.name}</label>`;
+    }).join('');
+  }
+
+  function selected(container){
+    return Array.from(document.querySelectorAll(`${container} input:checked`)).map(x=>x.value);
+  }
+
+  function renderTeamList(){
+    $('#teamList').innerHTML=S.users.map(u=>`<div class="person"><span>${u.name}</span><span class="badge">${u.role}</span></div>`).join('');
+  }
+
+  function renderLegend(){
+    const c=S.config.colors;
+    $('#legend').innerHTML=`
+      <div class="legendItem"><span class="swatch" style="background:${c.global_closed}"></span>Cierre global</div>
+      <div class="legendItem"><span class="swatch" style="background:${c.national}"></span>Festivo nacional</div>
+      <div class="legendItem"><span class="swatch" style="background:${c.regional}"></span>Festivo Comunidad Valenciana</div>
+      <div class="legendItem"><span class="swatch" style="background:${c.local}"></span>Festivo local Alicante</div>
+      <div class="legendItem"><span class="swatch" style="background:${c.madrid_volume}"></span>Madrid (impacto volumen)</div>
+      <div class="legendItem"><span class="swatch" style="background:${c.vacation}"></span>Vacaciones</div>
+    `;
+  }
+
+  function renderRules(){
+    $('#rulesList').innerHTML=`
+      <li>Generación normal: 6/2</li>
+      <li>Alerta normal si baja de: 4/2</li>
+      <li>Festivo legal: nacional/CV/Alicante</li>
+      <li>Madrid: impacto volumen (no festivo legal)</li>
+      <li>Tarde: prohibido 2 semanas seguidas; prohibido 3 semanas en el mes</li>
+    `;
+  }
+
   function render(){
     if(!S.config) return;
+
     $('#appName').textContent=S.config.appName;
     $('#modeBox').textContent=S.admin?'Modo administrador':'Modo lectura';
     $('#modeBox').className=`mode ${S.admin?'admin':'readonly'}`;
+
     $$('.adminOnly').forEach(x=>x.classList.toggle('hidden',!S.admin));
     $('#btnUnlock').classList.toggle('hidden',S.admin);
     $('#viewMonth').classList.toggle('active',S.view==='month');
     $('#viewWeek').classList.toggle('active',S.view==='week');
-    $('#teamList').innerHTML=S.users.map(u=>`<div class="person"><span>${u.name}</span><span class="pill">${Math.max(0,(u.vacation?.total||0)-(u.vacationUsed||0))}d</span></div>`).join('');
+
+    renderTeamList();
+    renderLegend();
+    renderRules();
+
     renderCalendar();
+
+    // quality + alerts for current month
     const y=S.date.getFullYear(), m=S.date.getMonth();
+    const monthDays=range(iso(new Date(y,m,1)), iso(new Date(y,m+1,0)));
     const issues=[];
-    for(const day of range(iso(new Date(y,m,1)), iso(new Date(y,m+1,0)))) issues.push(...evalDay(day).issues);
+    monthDays.forEach(d=>issues.push(...evalDay(d).issues));
     $('#qualityBox').textContent=issues.length?`${issues.length} incidencias`:'Sin incidencias';
     $('#alerts').innerHTML=issues.slice(0,10).map(i=>`<div class="alert"><b>${i.date}</b> - ${i.message}</div>`).join('');
   }
@@ -235,10 +341,22 @@
     const y=S.date.getFullYear(), m=S.date.getMonth();
     $('#repMonth').classList.toggle('active',S.repMode==='month');
     $('#repYear').classList.toggle('active',S.repMode==='year');
+
     const rows=S.repMode==='year' ? reportYear(y) : reportMonth(y,m);
     S.lastReport=rows;
+
     $('#reportMeta').textContent=S.repMode==='year'?`Total anual ${y}`:new Date(y,m,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'});
-    $('#reportContent').innerHTML=`<table class="table"><tr><th>Persona</th><th>Días mañana</th><th>Horas mañana</th><th>Días tarde</th><th>Horas tarde</th><th>Días festivo legal</th><th>Horas festivo legal</th><th>Días impacto Madrid</th><th>Horas impacto Madrid</th><th>Total</th></tr>${rows.map(r=>`<tr><td>${r.name}</td><td>${r.morningDays}</td><td>${r.morningHours}</td><td>${r.eveningDays}</td><td>${r.eveningHours}</td><td>${r.legalHolidayDays}</td><td>${r.legalHolidayHours}</td><td>${r.impactHolidayDays}</td><td>${r.impactHolidayHours}</td><td><b>${r.totalHours}</b></td></tr>`).join('')}</table>`;
+
+    $('#reportContent').innerHTML=`
+      <table class="table">
+        <tr>
+          <th>Persona</th><th>Días mañana</th><th>Horas mañana</th><th>Días tarde</th><th>Horas tarde</th>
+          <th>Días festivo legal</th><th>Horas festivo legal</th><th>Días impacto Madrid</th><th>Horas impacto Madrid</th><th>Total</th>
+        </tr>
+        ${rows.map(r=>`<tr><td>${r.name}</td><td>${r.morningDays}</td><td>${r.morningHours}</td><td>${r.eveningDays}</td><td>${r.eveningHours}</td><td>${r.legalHolidayDays}</td><td>${r.legalHolidayHours}</td><td>${r.impactHolidayDays}</td><td>${r.impactHolidayHours}</td><td><b>${r.totalHours}</b></td></tr>`).join('')}
+      </table>
+    `;
+
     $('#reportDialog').showModal();
   }
 
@@ -253,34 +371,142 @@
     URL.revokeObjectURL(a.href);
   }
 
+  function openVacations(){
+    $('#vacUser').innerHTML=S.users.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+    syncVacTotal();
+    renderVacationList();
+    $('#vacDialog').showModal();
+  }
+
+  function syncVacTotal(){
+    const user=S.users.find(u=>u.id===$('#vacUser').value);
+    $('#vacTotal').value = user?.vacation?.total ?? 0;
+  }
+
+  function renderVacationList(){
+    const html=S.users.map(u=>{
+      const remaining=Math.max(0,(u.vacation?.total||0) - vacationUsedDays(u));
+      const items=(u.timeOff||[]).filter(x=>x.type==='vacation').map((v,i)=>{
+        return `<div class="person"><span>${v.start} → ${v.end}${v.notes?` · ${v.notes}`:''}</span><button type="button" class="btn" style="width:auto;padding:4px 8px" data-del="${u.id}:${i}">Borrar</button></div>`;
+      }).join('') || '<p>Sin vacaciones</p>';
+      return `<h4>${u.name} <span class="badge">restantes ${remaining}</span></h4>${items}`;
+    }).join('');
+
+    $('#vacList').innerHTML=html;
+
+    $$('[data-del]').forEach(btn=>{
+      btn.onclick=()=>{
+        const [uid,idx]=btn.dataset.del.split(':');
+        const user=S.users.find(u=>u.id===uid);
+        user.timeOff.splice(Number(idx),1);
+        renderVacationList();
+        render();
+      };
+    });
+  }
+
+  function vacationUsedDays(user){
+    let total=0;
+    (user.timeOff||[]).filter(x=>x.type==='vacation').forEach(v=>{
+      total += Math.floor((parseISO(v.end)-parseISO(v.start))/86400000)+1;
+    });
+    return total;
+  }
+
   function bind(){
     $('#prev').onclick=()=>{ S.view==='week' ? (S.date=addDays(S.date,-7)) : S.date.setMonth(S.date.getMonth()-1); render(); };
-    $('#next').onclick=()=>{ S.view==='week' ? (S.date=addDays(S.date, 7)) : S.date.setMonth(S.date.getMonth()+1); render(); };
+    $('#next').onclick=()=>{ S.view==='week' ? (S.date=addDays(S.date,7)) : S.date.setMonth(S.date.getMonth()+1); render(); };
     $('#today').onclick=()=>{ S.date=new Date(); render(); };
     $('#viewMonth').onclick=()=>{ S.view='month'; render(); };
     $('#viewWeek').onclick=()=>{ S.view='week'; render(); };
 
     $('#btnUnlock').onclick=()=>{ $('#adminPassword').value=''; $('#adminDialog').showModal(); setTimeout(()=>$('#adminPassword').focus(),0); };
     $('#btnLock').onclick=()=>{ S.admin=false; $('#adminPassword').value=''; render(); };
-    $('#doUnlock').onclick=async e=>{ e.preventDefault(); const p=$('#adminPassword').value; $('#adminPassword').value=''; if(await sha256(p)===S.config.adminPasswordHash){ S.admin=true; $('#adminDialog').close(); render(); } else alert('Contraseña incorrecta'); };
+    $('#doUnlock').onclick=async e=>{
+      e.preventDefault();
+      const p=$('#adminPassword').value;
+      $('#adminPassword').value='';
+      if(await sha256(p)===S.config.adminPasswordHash){
+        S.admin=true;
+        $('#adminDialog').close();
+        render();
+      } else alert('Contraseña incorrecta');
+    };
 
-    $('#btnAuto').onclick=()=>{ const y=S.date.getFullYear(), m=S.date.getMonth(); $('#autoFrom').value=iso(new Date(y,m,1)); $('#autoTo').value=iso(new Date(y,m+1,0)); $('#autoDialog').showModal(); };
-    $('#runAuto').onclick=e=>{ e.preventDefault(); const a=$('#autoFrom').value, b=$('#autoTo').value; if(!a||!b||b<a) return alert('Rango no válido'); generateBetween(a,b,$('#overwrite').checked); $('#autoDialog').close(); render(); };
+    $('#btnVacations').onclick=openVacations;
+    $('#vacUser').onchange=()=>{ syncVacTotal(); };
+
+    $('#saveVacTotal').onclick=e=>{
+      e.preventDefault();
+      const user=S.users.find(u=>u.id===$('#vacUser').value);
+      user.vacation=user.vacation||{};
+      user.vacation.total=Math.max(0,Number($('#vacTotal').value||0));
+      renderVacationList();
+      render();
+    };
+
+    $('#addVacation').onclick=e=>{
+      e.preventDefault();
+      const user=S.users.find(u=>u.id===$('#vacUser').value);
+      const a=$('#vacFrom').value;
+      const b=$('#vacTo').value;
+      if(!a||!b||b<a) return alert('Revisa el rango.');
+      const warnings=vacationWarnings(user,a,b);
+      if(warnings.length && !confirm('Aviso:\n\n'+warnings.join('\n')+'\n\n¿Continuar igualmente?')) return;
+      user.timeOff=user.timeOff||[];
+      user.timeOff.push({type:'vacation',start:a,end:b,notes:$('#vacNotes').value||''});
+      $('#vacFrom').value=''; $('#vacTo').value=''; $('#vacNotes').value='';
+      renderVacationList();
+      render();
+    };
+
+    $('#btnAuto').onclick=()=>{
+      const y=S.date.getFullYear(), m=S.date.getMonth();
+      $('#autoFrom').value=iso(new Date(y,m,1));
+      $('#autoTo').value=iso(new Date(y,m+1,0));
+      $('#autoDialog').showModal();
+    };
+
+    $('#runAuto').onclick=e=>{
+      e.preventDefault();
+      const a=$('#autoFrom').value;
+      const b=$('#autoTo').value;
+      if(!a||!b||b<a) return alert('Rango no válido');
+      generateBetween(a,b,$('#overwrite').checked);
+      $('#autoDialog').close();
+      render();
+    };
 
     $('#btnReport').onclick=()=>{ S.repMode='year'; showReport(); };
     $('#repMonth').onclick=()=>{ S.repMode='month'; showReport(); };
     $('#repYear').onclick=()=>{ S.repMode='year'; showReport(); };
     $('#downloadReport').onclick=e=>{ e.preventDefault(); downloadCsv(); };
 
+    $('#btnExport').onclick=()=>{
+      const download=(name,obj)=>{
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}));
+        a.download=name;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      };
+      download('schedule.json', S.schedule);
+      download('users.json', S.users);
+      download('holidays.json', S.holidays);
+      download('config.json', S.config);
+    };
+
     $$('[data-close]').forEach(b=>b.onclick=()=>{ const d=document.getElementById(b.dataset.close); if(d?.id==='adminDialog') $('#adminPassword').value=''; d?.close(); });
   }
 
-  load().then(()=>{ bind(); render(); }).catch(err=>{ console.error(err); document.querySelector('.main').innerHTML=`<div style="margin:24px;padding:16px;background:#fff1f2;border:2px solid #ef3340;border-radius:10px"><h2>Error cargando la app</h2><p>${err.message||err}</p></div>`; });
-
-  async function load(){
+  async function loadAll(){
     const [users,config,holidays,schedule] = await Promise.all(['users','config','holidays','schedule'].map(loadJson));
     Object.assign(S,{users,config,holidays,schedule,holidayMap:new Map(holidays.map(h=>[h.date,h]))});
-    // compute used days
-    S.users.forEach(u=>u.vacationUsed = (u.timeOff||[]).filter(x=>x.type==='vacation').reduce((acc,v)=>acc+ (Math.floor((parseISO(v.end)-parseISO(v.start))/86400000)+1),0));
   }
+
+  loadAll().then(()=>{ bind(); render(); }).catch(err=>{
+    console.error(err);
+    document.querySelector('.main').innerHTML=`<div style="margin:24px;padding:16px;background:#fff1f2;border:2px solid #ef3340;border-radius:10px"><h2>Error cargando la app</h2><p>${err.message||err}</p></div>`;
+  });
+
 })();

@@ -1,12 +1,7 @@
 {
-  "appName": "IT Planner v5.9 PRO",
+  "appName": "IT Planner v5.10 PRO",
   "adminName": "Alejandro Rondón Gámez",
   "adminPasswordHash": "64535eae042bd308cc01e23125abfe7c05e2fe6b28b400b342c8d65105278171",
-  "github": {
-    "owner": "alejandrorondongamez-cell",
-    "repo": "planificador-turnos",
-    "branch": "main"
-  },
   "serviceStartDate": "2026-07-15",
   "rules": {
     "workdays": [
