@@ -1,5 +1,5 @@
 {
-  "appName": "IT Planner v5.5 PRO",
+  "appName": "IT Planner v5.6 PRO",
   "adminName": "Alejandro Rondón Gámez",
   "adminPasswordHash": "64535eae042bd308cc01e23125abfe7c05e2fe6b28b400b342c8d65105278171",
   "github": {
@@ -19,6 +19,7 @@
     "maxPeopleOffPerWeek": 2,
     "vacationMinNaturalDaysAfterServiceStart": 7,
     "vacationMustBeMondayToSundayAfterServiceStart": true,
+    "avoidConsecutiveEveningWeeks": true,
     "shiftHours": {
       "morning": 9,
       "evening": 9

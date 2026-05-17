@@ -1,3 +1,3 @@
-# IT Planner v5.5 PRO
+# IT Planner v5.6 PRO
 
-Cambios: exportar JSON solo admin, generador por rango, vacaciones por días naturales, máximo 2 personas fuera por semana, reglas de vacaciones especiales desde 15/07/2026.
+Cambios: tooltip con lista completa de turnos, contadores M/T/V, fines de semana sombreados, festivo junto al número de día y generador mejorado para evitar tarde consecutiva y exceso de festivos.
