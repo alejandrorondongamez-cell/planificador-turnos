@@ -1,6 +1,0 @@
-{
-  "turnos": [
-    { "nombre": "Mañana", "horario": "08:00 - 17:00", "min_personal": 3 },
-    { "nombre": "Tarde", "horario": "15:00 - 24:00", "min_personal": 2 }
-  ]
-}
