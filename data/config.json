@@ -1,5 +1,5 @@
 {
-  "appName": "IT Planner v5.6 PRO",
+  "appName": "IT Planner v5.7 PRO",
   "adminName": "Alejandro Rondón Gámez",
   "adminPasswordHash": "64535eae042bd308cc01e23125abfe7c05e2fe6b28b400b342c8d65105278171",
   "github": {
@@ -19,6 +19,7 @@
     "maxPeopleOffPerWeek": 2,
     "vacationMinNaturalDaysAfterServiceStart": 7,
     "vacationMustBeMondayToSundayAfterServiceStart": true,
+    "vacationOverbookingMode": "warn_allow",
     "avoidConsecutiveEveningWeeks": true,
     "shiftHours": {
       "morning": 9,
@@ -38,6 +39,10 @@
         "evening": 2
       },
       "local": {
+        "morning": 4,
+        "evening": 2
+      },
+      "madrid_volume": {
         "morning": 4,
         "evening": 2
       },
@@ -63,6 +68,10 @@
         "morning": 4,
         "evening": 2
       },
+      "madrid_volume": {
+        "morning": 6,
+        "evening": 2
+      },
       "global_closed": {
         "morning": 0,
         "evening": 0
@@ -74,6 +83,7 @@
     "national": "#fff1f2",
     "regional": "#fff7ed",
     "local": "#eff6ff",
+    "madrid_volume": "#f5f3ff",
     "vacation": "#dcfce7"
   }
 }
